@@ -14,11 +14,7 @@ const Marker = (p: { size: number; color: string; onClick: () => void }) => (
   />
 );
 
-const PositionOverlayItem = (p: {
-  xPercent: number;
-  yPercent: number;
-  children: ReactNode;
-}) => (
+const PositionOverlayItem = (p: { xPercent: number; yPercent: number; children: ReactNode }) => (
   <div
     style={{
       position: "absolute",
@@ -38,31 +34,37 @@ const InteractiveImage = (p: {
   zoom: number;
 }) => {
   const imgRef = useRef<HTMLImageElement>(null);
+  const [naturalDimensions, setNaturalDimensions] = useState<{ width: number; height: number }>({
+    width: 0,
+    height: 0,
+  });
 
   return (
-    <div style={{ overflow: "hidden", display: "inline-block" }}>
-      <img
-        src={p.src}
-        ref={imgRef}
-        onClick={(e) => {
-          if (!imgRef.current) return;
+    <img
+      src={p.src}
+      ref={imgRef}
+      onLoad={(e) => {
+        const { naturalHeight, naturalWidth } = e.currentTarget;
 
-          const rect = imgRef.current.getBoundingClientRect();
-          const xPercent = ((e.clientX - rect.left) / rect.width) * 100;
-          const yPercent = ((e.clientY - rect.top) / rect.height) * 100;
+        setNaturalDimensions({ width: naturalWidth, height: naturalHeight });
+      }}
+      onClick={(e) => {
+        if (!imgRef.current) return;
+        const rect = imgRef.current.getBoundingClientRect();
 
-          p.onClick({ xPercent, yPercent });
-        }}
-        style={{
-          display: "block",
-          height: "auto",
-          cursor: "crosshair",
-          transform: `scale(${p.zoom})`,
-          transformOrigin: "top left",
-        }}
-        alt="Interactive"
-      />
-    </div>
+        const xPercent = ((e.clientX - rect.left) / rect.width) * 100;
+        const yPercent = ((e.clientY - rect.top) / rect.height) * 100;
+
+        p.onClick({ xPercent, yPercent });
+      }}
+      style={{
+        display: "inline-block",
+        height: `${naturalDimensions.height * p.zoom}px`,
+        width: `${naturalDimensions.width * p.zoom}px`,
+        cursor: "crosshair",
+      }}
+      alt=""
+    />
   );
 };
 
@@ -72,7 +74,7 @@ const OverlayMarkerWrapper = (p: {
   onMarkerClick: (x: { xPercent: number; yPercent: number }) => void;
 }) => {
   return (
-    <div style={{ position: "relative", display: "inline-block" }}>
+    <div style={{ position: "relative", display: "inline-block", fontSize: 0 }}>
       {p.children}
       {p.markers.map((marker) => (
         <PositionOverlayItem
@@ -97,9 +99,7 @@ const OverlayMarkerWrapper = (p: {
 };
 
 const App = () => {
-  const [markers, setMarkers] = useState<
-    { xPercent: number; yPercent: number }[]
-  >([]);
+  const [markers, setMarkers] = useState<{ xPercent: number; yPercent: number }[]>([]);
   const [zoom, setZoom] = useState(1);
 
   return (
