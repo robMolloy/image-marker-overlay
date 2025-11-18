@@ -1,4 +1,5 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { ZoomableImage } from "./components/ZoomableImage";
 
 const Marker = (p: { size: number; color: string; onClick: () => void }) => (
   <div
@@ -30,8 +31,10 @@ const PositionOverlayItem = (p: { xPercent: number; yPercent: number; children: 
 
 const InteractiveImage = (p: {
   src: string;
-  onClick: (p: { xPercent: number; yPercent: number }) => void;
   zoom: number;
+  onClick: (p: { xPercent: number; yPercent: number }) => void;
+  onWheelUp: () => void;
+  onWheelDown: () => void;
 }) => {
   const imgRef = useRef<HTMLImageElement>(null);
   const [naturalDimensions, setNaturalDimensions] = useState<{ width: number; height: number }>({
@@ -39,19 +42,38 @@ const InteractiveImage = (p: {
     height: 0,
   });
 
+  useEffect(() => {
+    const img = imgRef.current;
+    if (!img) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      const isScrollUp = e.deltaY < 0;
+      const fn = isScrollUp ? p.onWheelUp : p.onWheelDown;
+      fn();
+    };
+
+    img.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => {
+      img.removeEventListener("wheel", handleWheel);
+    };
+  }, [p.onWheelUp, p.onWheelDown]);
+
   return (
     <img
-      src={p.src}
       ref={imgRef}
+      src={p.src}
       onLoad={(e) => {
-        const { naturalHeight, naturalWidth } = e.currentTarget;
-
+        const { naturalWidth, naturalHeight } = e.currentTarget;
         setNaturalDimensions({ width: naturalWidth, height: naturalHeight });
       }}
       onClick={(e) => {
         if (!imgRef.current) return;
         const rect = imgRef.current.getBoundingClientRect();
 
+        // Use scaled DOM width/height directly
         const xPercent = ((e.clientX - rect.left) / rect.width) * 100;
         const yPercent = ((e.clientY - rect.top) / rect.height) * 100;
 
@@ -59,9 +81,11 @@ const InteractiveImage = (p: {
       }}
       style={{
         display: "inline-block",
-        height: `${naturalDimensions.height * p.zoom}px`,
+        verticalAlign: "top", // remove the 4px baseline gap
         width: `${naturalDimensions.width * p.zoom}px`,
+        height: `${naturalDimensions.height * p.zoom}px`,
         cursor: "crosshair",
+        overscrollBehavior: "none", // prevent scroll chaining
       }}
       alt=""
     />
@@ -98,26 +122,59 @@ const OverlayMarkerWrapper = (p: {
   );
 };
 
-const App = () => {
+const ImageWithMarkers = (p: { src: string }) => {
   const [markers, setMarkers] = useState<{ xPercent: number; yPercent: number }[]>([]);
   const [zoom, setZoom] = useState(1);
 
   return (
     <div>
-      <div style={{ marginBottom: 10 }}>
-        <button onClick={() => setZoom((z) => z * 1.2)}>Zoom In</button>
-        <button onClick={() => setZoom((z) => z / 1.2)}>Zoom Out</button>
-      </div>
-
-      <OverlayMarkerWrapper markers={markers} onMarkerClick={() => {}}>
+      <OverlayMarkerWrapper
+        markers={markers}
+        onMarkerClick={(x) => {
+          setMarkers((prev) =>
+            prev.filter(
+              (marker) => marker.xPercent !== x.xPercent || marker.yPercent !== x.yPercent
+            )
+          );
+        }}
+      >
         <InteractiveImage
-          src="https://upload.wikimedia.org/wikipedia/commons/8/85/Smiley.svg"
+          onWheelUp={() => setZoom((z) => z * 1.2)}
+          onWheelDown={() => setZoom((z) => z / 1.2)}
+          src={p.src}
           onClick={(coord) => setMarkers((markers) => [...markers, coord])}
           zoom={zoom}
         />
       </OverlayMarkerWrapper>
     </div>
   );
+};
+
+const imgSrcs = [
+  "https://upload.wikimedia.org/wikipedia/commons/8/85/Smiley.svg",
+  "https://upload.wikimedia.org/wikipedia/commons/3/3e/IdeaLab_badge_2.png",
+] as const;
+
+const App = () => {
+  const [src, setSrc] = useState<string>(imgSrcs[0]);
+
+  return (
+    <div>
+      <button onClick={() => setSrc((prev) => (prev === imgSrcs[0] ? imgSrcs[1] : imgSrcs[0]))}>
+        toggle src
+      </button>
+      <ZoomableImage src={src} />
+    </div>
+  );
+
+  // return (
+  //   <div>
+  //     <button onClick={() => setSrc((prev) => (prev === imgSrcs[0] ? imgSrcs[1] : imgSrcs[0]))}>
+  //       toggle src
+  //     </button>
+  //     <ImageWithMarkers src={src} />
+  //   </div>
+  // );
 };
 
 export default App;
