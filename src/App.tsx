@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ZoomableImage } from "./components/ZoomableImage";
 
 type TCoord = { x: number; y: number };
@@ -15,24 +15,24 @@ const OverlayMarkerWrapper = (p: {
   return (
     <div
       style={{ position: "relative" }}
-      onDoubleClick={(e) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        const clickX = e.clientX - rect.left;
-        const clickY = e.clientY - rect.top;
+      // onDoubleClick={(e) => {
+      //   const rect = e.currentTarget.getBoundingClientRect();
+      //   const clickX = e.clientX - rect.left;
+      //   const clickY = e.clientY - rect.top;
 
-        const imageX = (clickX - p.offset.x) / p.scale;
-        const imageY = (clickY - p.offset.y) / p.scale;
+      //   const imageX = (clickX - p.offset.x) / p.scale;
+      //   const imageY = (clickY - p.offset.y) / p.scale;
 
-        if (
-          imageX < 0 ||
-          imageY < 0 ||
-          imageX > p.naturalImageDimensions.width ||
-          imageY > p.naturalImageDimensions.height
-        )
-          return;
+      //   if (
+      //     imageX < 0 ||
+      //     imageY < 0 ||
+      //     imageX > p.naturalImageDimensions.width ||
+      //     imageY > p.naturalImageDimensions.height
+      //   )
+      //     return;
 
-        p.setMarkers((prev) => [...prev, { x: imageX, y: imageY }]);
-      }}
+      //   p.setMarkers((prev) => [...prev, { x: imageX, y: imageY }]);
+      // }}
     >
       {p.children}
 
@@ -73,20 +73,22 @@ const ImageWithMarkers = ({ src }: { src: string }) => {
   const [naturalImageDimensions, setNaturalImageDimensions] = useState({ height: 0, width: 0 });
 
   return (
-    <OverlayMarkerWrapper
-      markers={markers}
-      offset={offset}
-      scale={scale}
-      setMarkers={setMarkers}
-      naturalImageDimensions={naturalImageDimensions}
-    >
-      <ZoomableImage
-        src={src}
-        onScaleChange={setScale}
-        onOffsetChange={setOffset}
-        onNaturalDimensionsChange={setNaturalImageDimensions}
-      />
-    </OverlayMarkerWrapper>
+    <>
+      <OverlayMarkerWrapper
+        markers={markers}
+        offset={offset}
+        scale={scale}
+        setMarkers={setMarkers}
+        naturalImageDimensions={naturalImageDimensions}
+      >
+        <ZoomableImage
+          src={src}
+          onScaleChange={setScale}
+          onOffsetChange={setOffset}
+          onNaturalDimensionsChange={setNaturalImageDimensions}
+        />
+      </OverlayMarkerWrapper>
+    </>
   );
 };
 const imgSrcs = [
@@ -97,6 +99,11 @@ const imgSrcs = [
   "https://upload.wikimedia.org/wikipedia/commons/3/3e/IdeaLab_badge_2.png",
 ] as const;
 const App = () => {
+  useEffect(() => {
+    window.document.body.style.overflow = "hidden";
+    window.document.body.style.margin = "0";
+    window.document.body.style.height = "100%";
+  }, []);
   return (
     <>
       <ImageWithMarkers src={imgSrcs[1]} />
