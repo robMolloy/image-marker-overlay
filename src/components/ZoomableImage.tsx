@@ -29,13 +29,13 @@ const isOutOfBounds = (p: {
   naturalWidth: number;
   scale: number;
 }) => {
-  const { offset } = p;
+  const { offset, naturalWidth, scale } = p;
 
-  // Left edge of the scaled image
-  const leftEdge = offset.x;
+  const imageWidth = naturalWidth * scale;
 
-  // True if the image starts past the left side
-  return leftEdge < 0;
+  const rightEdge = offset.x + imageWidth;
+
+  return rightEdge < 0;
 };
 
 type TCoord = { x: number; y: number };
