@@ -102,7 +102,7 @@ const isSomeOutOfBounds = (p: {
 
 const isLeftSomeOutOfBounds = (p: { offsetCoord: { x: number; y: number } }) => {
   const leftEdge = p.offsetCoord.x;
-  return leftEdge < 0;
+  return leftEdge <= 0;
 };
 
 const isRightSomeOutOfBounds = (p: {
@@ -111,12 +111,12 @@ const isRightSomeOutOfBounds = (p: {
   containerRect: DOMRect;
 }) => {
   const rightEdge = p.offsetCoord.x + p.scaledImageDimensions.width;
-  return rightEdge > p.containerRect.width;
+  return rightEdge >= p.containerRect.width;
 };
 
 const isTopSomeOutOfBounds = (p: { offsetCoord: { x: number; y: number } }) => {
   const topEdge = p.offsetCoord.y;
-  return topEdge < 0;
+  return topEdge <= 0;
 };
 
 const isBottomSomeOutOfBounds = (p: {
@@ -125,7 +125,7 @@ const isBottomSomeOutOfBounds = (p: {
   containerRect: DOMRect;
 }) => {
   const bottomEdge = p.offsetCoord.y + p.scaledImageDimensions.height;
-  return bottomEdge > p.containerRect.height;
+  return bottomEdge >= p.containerRect.height;
 };
 
 const getScaledImageDimensions = (p: {
@@ -264,30 +264,36 @@ const clampLeftOverflowWhenImageIsSmallerThanContainer = (p: {
   offsetCoord: { x: number; y: number };
   scaledImageDimensions: { width: number; height: number };
   containerRect: DOMRect;
+  directionX: 1 | -1;
+  directionY: 1 | -1;
 }) => {
   const { offsetCoord, scaledImageDimensions, containerRect } = p;
 
   if (
     isRightEdgeWithinBounds({ offsetCoord, scaledImageDimensions, containerRect }) &&
-    isLeftSomeOutOfBounds({ offsetCoord })
+    isLeftSomeOutOfBounds({ offsetCoord }) &&
+    p.directionX === 1
   )
     return { x: getAlignLeftOffsetX(), y: offsetCoord.y };
 
   if (
     isBottomEdgeWithinBounds({ offsetCoord, scaledImageDimensions, containerRect }) &&
-    isTopSomeOutOfBounds({ offsetCoord })
+    isTopSomeOutOfBounds({ offsetCoord }) &&
+    p.directionY === 1
   )
     return { x: offsetCoord.x, y: getAlignTopOffsetY() };
 
   if (
     isLeftEdgeWithinBounds({ offsetCoord }) &&
-    isRightSomeOutOfBounds({ offsetCoord, scaledImageDimensions, containerRect })
+    isRightSomeOutOfBounds({ offsetCoord, scaledImageDimensions, containerRect }) &&
+    p.directionX === -1
   )
     return { x: getAlignRightOffsetX({ scaledImageDimensions, containerRect }), y: offsetCoord.y };
 
   if (
     isTopEdgeWithinBounds({ offsetCoord }) &&
-    isBottomSomeOutOfBounds({ offsetCoord, scaledImageDimensions, containerRect })
+    isBottomSomeOutOfBounds({ offsetCoord, scaledImageDimensions, containerRect }) &&
+    p.directionY === -1
   )
     return { x: offsetCoord.x, y: getAlignBottomOffsetY({ scaledImageDimensions, containerRect }) };
 };
@@ -308,11 +314,6 @@ export const ZoomableImage = (p: {
   useEffect(() => p.onScaleChange(scale), [scale]);
   useEffect(() => p.onOffsetChange(offsetCoord), [offsetCoord]);
   useEffect(() => p.onNaturalDimensionsChange(naturalImageDimensions), [naturalImageDimensions]);
-
-  // const moveWithinBounds = () => {
-  //   window.scrollTo(0, 0);
-  //   setOffsetCoord({ x: 0, y: 0 });
-  // };
 
   useEffect(() => {
     const c = containerRef.current;
@@ -352,6 +353,8 @@ export const ZoomableImage = (p: {
             offsetCoord,
             scaledImageDimensions,
             containerRect,
+            directionX: e.deltaX > 0 ? 1 : -1,
+            directionY: e.deltaY > 0 ? 1 : -1,
           });
           if (realignedCoord) return setOffsetCoord(realignedCoord);
         } else {
