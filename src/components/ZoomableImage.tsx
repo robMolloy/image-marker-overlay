@@ -251,13 +251,13 @@ const clampOffsetToContainerBounds = (p: {
     return { x: getAlignRightOffsetX({ scaledImageDimensions, containerRect }), y: offsetCoord.y };
 
   if (isTopEdgeWithinBounds({ offsetCoord }) && directionY === -1)
-    return { x: getAlignTopOffsetY(), y: offsetCoord.y };
+    return { x: offsetCoord.x, y: getAlignTopOffsetY() };
 
   if (
     isBottomEdgeWithinBounds({ offsetCoord, scaledImageDimensions, containerRect }) &&
     directionY === 1
   )
-    return { x: getAlignBottomOffsetY({ scaledImageDimensions, containerRect }), y: offsetCoord.y };
+    return { x: offsetCoord.x, y: getAlignBottomOffsetY({ scaledImageDimensions, containerRect }) };
 };
 
 type TCoord = { x: number; y: number };
@@ -321,6 +321,13 @@ export const ZoomableImage = (p: {
             scaledImageDimensions,
             containerRect,
           });
+          // const realignedCoord = clampOffsetToContainerBounds({
+          //   offsetCoord,
+          //   scaledImageDimensions,
+          //   containerRect,
+          //   directionX: e.deltaX > 0 ? 1 : -1,
+          //   directionY: e.deltaY > 0 ? 1 : -1,
+          // });
           if (realignedCoord) return setOffsetCoord(realignedCoord);
         } else {
           const realignedCoord = clampOffsetToContainerBounds({
