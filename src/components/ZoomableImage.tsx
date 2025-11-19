@@ -70,6 +70,17 @@ const isSomeOutOfBounds = (p: {
   );
 };
 
+const isImageSmallerThanContainer = (p: {
+  naturalImageDimensions: { width: number; height: number };
+  scale: number;
+  containerRect: DOMRect;
+}) => {
+  const imageWidth = p.naturalImageDimensions.width * p.scale;
+  const imageHeight = p.naturalImageDimensions.height * p.scale;
+
+  return imageWidth < p.containerRect.width && imageHeight < p.containerRect.height;
+};
+
 type TCoord = { x: number; y: number };
 const zoomIncrement = 0.08; // fixed scale increment
 export const ZoomableImage = (p: {
@@ -140,7 +151,16 @@ export const ZoomableImage = (p: {
           const container = containerRef.current;
           if (!container) return;
 
-          const isoob = isOutOfBounds({
+          const containerRect = container.getBoundingClientRect();
+          const isSmaller = isImageSmallerThanContainer({
+            naturalImageDimensions,
+            scale,
+            containerRect,
+          });
+
+          console.log(`ZoomableImage.tsx:${/*LL*/ 161}`, { isSmaller });
+
+          const isoob = isCompletelyOutOfBounds({
             offset: offsetCoord,
             naturalImageDimensions,
             scale,
