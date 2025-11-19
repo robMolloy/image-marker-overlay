@@ -260,7 +260,7 @@ const clampOffsetToContainerBounds = (p: {
     return { x: offsetCoord.x, y: getAlignBottomOffsetY({ scaledImageDimensions, containerRect }) };
 };
 
-const clampLeftOverflowWhenImageIsSmallerThanContainer = (p: {
+const clampWhenImageIsSmallerThanContainer = (p: {
   offsetCoord: { x: number; y: number };
   scaledImageDimensions: { width: number; height: number };
   containerRect: DOMRect;
@@ -349,7 +349,7 @@ export const ZoomableImage = (p: {
         return setOffsetCoord(realignedCoord ? realignedCoord : newOffsetCoord);
       } else {
         if (isSmaller) {
-          const realignedCoord = clampLeftOverflowWhenImageIsSmallerThanContainer({
+          const realignedCoord = clampWhenImageIsSmallerThanContainer({
             offsetCoord,
             scaledImageDimensions,
             containerRect,
