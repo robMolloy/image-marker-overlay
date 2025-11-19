@@ -26,19 +26,18 @@ const clampOffset = (p: {
   offset: TCoord;
   scale: number;
   imageSize: { width: number; height: number };
-  rect: { width: number; height: number };
+  containerSize: { width: number; height: number };
 }) => {
   const maxX = 0; // image left edge cannot go past container left
   const maxY = 0; // image top edge cannot go past container top
 
-  const minX = Math.min(p.rect.width - p.imageSize.width * p.scale, 0); // image right edge cannot go past container right
-  const minY = Math.min(p.rect.height - p.imageSize.height * p.scale, 0); // bottom edge
+  const minX = Math.min(p.containerSize.width - p.imageSize.width * p.scale, 0); // image right edge cannot go past container right
+  const minY = Math.min(p.containerSize.height - p.imageSize.height * p.scale, 0); // bottom edge
 
-  const x = clamp({ value: p.offset.x, min: minX, max: maxX });
-  const y = clamp({ value: p.offset.y, min: minY, max: maxY });
-  const rtn = { x, y };
-  console.log(`ZoomableImage.tsx:${/*LL*/ 40}`, { rtn });
-  return rtn;
+  return {
+    x: clamp({ value: p.offset.x, min: minX, max: maxX }),
+    y: clamp({ value: p.offset.y, min: minY, max: maxY }),
+  };
 };
 
 type TCoord = { x: number; y: number };
@@ -83,19 +82,18 @@ export const ZoomableImage = (p: {
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
 
-      const rect = c.getBoundingClientRect();
       if (e.ctrlKey || e.metaKey) {
         const direction = e.deltaY > 0 ? -1 : 1;
-        zoom({ direction, rect, clientCoord: { x: e.clientX, y: e.clientY } });
+        zoom({
+          direction,
+          rect: c.getBoundingClientRect(),
+          clientCoord: { x: e.clientX, y: e.clientY },
+        });
       } else {
-        setOffsetCoord((prev) =>
-          clampOffset({
-            offset: { x: prev.x - e.deltaX, y: prev.y - e.deltaY },
-            scale,
-            imageSize: naturalImageDimensions,
-            rect,
-          })
-        );
+        setOffsetCoord((prev) => ({
+          x: prev.x - e.deltaX,
+          y: prev.y - e.deltaY,
+        }));
       }
     };
 
