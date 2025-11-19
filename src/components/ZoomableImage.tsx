@@ -26,18 +26,25 @@ const computeScale = (p: { direction: 1 | -1; scale: number }) => {
 
 const isOutOfBounds = (p: {
   offset: { x: number; y: number };
-  naturalWidth: number;
+  naturalImageDimensions: { width: number; height: number };
   scale: number;
-  containerWidth: number;
+  containerRect: DOMRect;
 }) => {
-  const { offset, naturalWidth, scale, containerWidth } = p;
+  const imageWidth = p.naturalImageDimensions.width * p.scale;
+  const imageHeight = p.naturalImageDimensions.height * p.scale;
 
-  const imageWidth = naturalWidth * scale;
-  const leftEdge = offset.x;
-  const rightEdge = offset.x + imageWidth;
+  const leftEdge = p.offset.x;
+  const rightEdge = p.offset.x + imageWidth;
+  const topEdge = p.offset.y;
+  const bottomEdge = p.offset.y + imageHeight;
 
-  // True if the image is completely off either side
-  return rightEdge < 0 || leftEdge > containerWidth;
+  // True if image is completely out of bounds in any direction
+  return (
+    rightEdge < 0 ||
+    leftEdge > p.containerRect.width ||
+    bottomEdge < 0 ||
+    topEdge > p.containerRect.height
+  );
 };
 
 type TCoord = { x: number; y: number };
@@ -109,11 +116,12 @@ export const ZoomableImage = (p: {
         onDoubleClick={() => {
           const container = containerRef.current;
           if (!container) return;
+
           const isoob = isOutOfBounds({
             offset: offsetCoord,
-            naturalWidth: naturalImageDimensions.width,
+            naturalImageDimensions,
             scale,
-            containerWidth: container.getBoundingClientRect().width,
+            containerRect: container.getBoundingClientRect(),
           });
           if (isoob) moveWithinBounds();
         }}
