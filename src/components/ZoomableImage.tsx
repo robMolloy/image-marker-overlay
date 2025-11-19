@@ -172,18 +172,12 @@ const getAlignedOffsetCoordsIfSomeOutOfBounds = (p: {
   if (isLeftSomeOutOfBounds({ offsetCoord })) return { x: getAlignLeftOffsetX(), y: offsetCoord.y };
 
   if (isRightSomeOutOfBounds({ offsetCoord, scaledImageDimensions, containerRect }))
-    return {
-      x: getAlignRightOffsetX({ scaledImageDimensions, containerRect }),
-      y: offsetCoord.y,
-    };
+    return { x: getAlignRightOffsetX({ scaledImageDimensions, containerRect }), y: offsetCoord.y };
 
   if (isTopSomeOutOfBounds({ offsetCoord })) return { x: offsetCoord.x, y: getAlignTopOffsetY() };
 
   if (isBottomSomeOutOfBounds({ offsetCoord, scaledImageDimensions, containerRect }))
-    return {
-      x: offsetCoord.x,
-      y: getAlignBottomOffsetY({ scaledImageDimensions, containerRect }),
-    };
+    return { x: offsetCoord.x, y: getAlignBottomOffsetY({ scaledImageDimensions, containerRect }) };
 };
 
 const getAlignedOffsetCoordsIfCompletelyOutOfBounds = (p: {
@@ -202,6 +196,22 @@ const getAlignedOffsetCoordsIfCompletelyOutOfBounds = (p: {
     return { x: offsetCoord.x, y: getAlignBottomOffsetY({ scaledImageDimensions, containerRect }) };
 
   if (isBottomCompletelyOutOfBounds({ offsetCoord, scaledImageDimensions }))
+    return { x: offsetCoord.x, y: getAlignTopOffsetY() };
+};
+
+const clampOffsetToContainerBounds = (p: {
+  offsetCoord: { x: number; y: number };
+  scaledImageDimensions: { width: number; height: number };
+  containerRect: DOMRect;
+}) => {
+  const { offsetCoord, containerRect, scaledImageDimensions } = p;
+  if (isLeftCompletelyOutOfBounds({ offsetCoord, containerRect }))
+    return { x: getAlignLeftOffsetX(), y: offsetCoord.y };
+  if (isRightCompletelyOutOfBounds({ offsetCoord, scaledImageDimensions }))
+    return { x: getAlignRightOffsetX({ scaledImageDimensions, containerRect }), y: offsetCoord.y };
+  if (isBottomCompletelyOutOfBounds({ offsetCoord, scaledImageDimensions }))
+    return { x: offsetCoord.x, y: getAlignBottomOffsetY({ scaledImageDimensions, containerRect }) };
+  if (isTopCompletelyOutOfBounds({ offsetCoord, containerRect }))
     return { x: offsetCoord.x, y: getAlignTopOffsetY() };
 };
 
@@ -268,11 +278,16 @@ export const ZoomableImage = (p: {
           });
           if (realignedCoord) return setOffsetCoord(realignedCoord);
         } else {
-          const realignedCoord = getAlignedOffsetCoordsIfCompletelyOutOfBounds({
+          const realignedCoord = clampOffsetToContainerBounds({
             offsetCoord,
             scaledImageDimensions,
             containerRect,
           });
+          // const realignedCoord = getAlignedOffsetCoordsIfCompletelyOutOfBounds({
+          //   offsetCoord,
+          //   scaledImageDimensions,
+          //   containerRect,
+          // });
           if (realignedCoord) return setOffsetCoord(realignedCoord);
         }
         setOffsetCoord((prev) => ({ x: prev.x - e.deltaX, y: prev.y - e.deltaY }));
