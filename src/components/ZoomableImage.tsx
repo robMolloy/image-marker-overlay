@@ -38,13 +38,48 @@ const isCompletelyOutOfBounds = (p: {
   const topEdge = p.offset.y;
   const bottomEdge = p.offset.y + imageHeight;
 
-  // True if image is completely out of bounds in any direction
   return (
     rightEdge < 0 ||
     leftEdge > p.containerRect.width ||
     bottomEdge < 0 ||
     topEdge > p.containerRect.height
   );
+};
+
+const isRightCompletelyOutOfBounds = (p: {
+  offset: { x: number; y: number };
+  naturalImageDimensions: { width: number; height: number };
+  scale: number;
+}) => {
+  const imageWidth = p.naturalImageDimensions.width * p.scale;
+  const rightEdge = p.offset.x + imageWidth;
+  return rightEdge < 0;
+};
+
+const isLeftCompletelyOutOfBounds = (p: {
+  offset: { x: number; y: number };
+  containerRect: DOMRect;
+}) => {
+  const leftEdge = p.offset.x;
+  return leftEdge > p.containerRect.width;
+};
+
+const isTopCompletelyOutOfBounds = (p: {
+  offset: { x: number; y: number };
+  containerRect: DOMRect;
+}) => {
+  const topEdge = p.offset.y;
+  return topEdge > p.containerRect.height;
+};
+
+const isBottomCompletelyOutOfBounds = (p: {
+  offset: { x: number; y: number };
+  naturalImageDimensions: { width: number; height: number };
+  scale: number;
+}) => {
+  const imageHeight = p.naturalImageDimensions.height * p.scale;
+  const bottomEdge = p.offset.y + imageHeight;
+  return bottomEdge < 0;
 };
 
 const isSomeOutOfBounds = (p: {
@@ -61,13 +96,44 @@ const isSomeOutOfBounds = (p: {
   const topEdge = p.offset.y;
   const bottomEdge = p.offset.y + imageHeight;
 
-  // True if image is completely out of bounds in any direction
   return (
     leftEdge < 0 ||
     rightEdge > p.containerRect.width ||
     topEdge < 0 ||
     bottomEdge > p.containerRect.height
   );
+};
+
+const isLeftSomeOutOfBounds = (p: { offset: { x: number; y: number } }) => {
+  const leftEdge = p.offset.x;
+  return leftEdge < 0;
+};
+
+const isRightSomeOutOfBounds = (p: {
+  offset: { x: number; y: number };
+  naturalImageDimensions: { width: number; height: number };
+  scale: number;
+  containerRect: DOMRect;
+}) => {
+  const imageWidth = p.naturalImageDimensions.width * p.scale;
+  const rightEdge = p.offset.x + imageWidth;
+  return rightEdge > p.containerRect.width;
+};
+
+const isTopSomeOutOfBounds = (p: { offset: { x: number; y: number } }) => {
+  const topEdge = p.offset.y;
+  return topEdge < 0;
+};
+
+const isBottomSomeOutOfBounds = (p: {
+  offset: { x: number; y: number };
+  naturalImageDimensions: { width: number; height: number };
+  scale: number;
+  containerRect: DOMRect;
+}) => {
+  const imageHeight = p.naturalImageDimensions.height * p.scale;
+  const bottomEdge = p.offset.y + imageHeight;
+  return bottomEdge > p.containerRect.height;
 };
 
 const isImageSmallerThanContainer = (p: {
@@ -79,22 +145,6 @@ const isImageSmallerThanContainer = (p: {
   const imageHeight = p.naturalImageDimensions.height * p.scale;
 
   return imageWidth < p.containerRect.width && imageHeight < p.containerRect.height;
-};
-
-const getTopRightOffsetCoord = (p: {
-  naturalImageDimensions: { width: number; height: number };
-  scale: number;
-  containerRect: DOMRect;
-}) => {
-  const imageWidth = p.naturalImageDimensions.width * p.scale;
-
-  // Align top to 0
-  const newY = 0;
-
-  // Align right edge to container right
-  const newX = p.containerRect.width - imageWidth;
-
-  return { x: newX, y: newY };
 };
 
 const getRightOffsetX = (p: {
@@ -115,6 +165,8 @@ const getBottomOffsetY = (p: {
 
   return p.containerRect.height - imageHeight;
 };
+const getLeftOffsetX = () => 0;
+const getTopOffsetY = () => 0;
 
 type TCoord = { x: number; y: number };
 const zoomIncrement = 0.08; // fixed scale increment
