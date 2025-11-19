@@ -19,39 +19,84 @@ const computeOffset = (p: {
   return { x, y };
 };
 
-const zoomIncrement = 0.02; // fixed scale increment
-export const ZoomableImage = (p: { src: string }) => {
+const clamp = (p: { value: number; min: number; max: number }) =>
+  Math.min(Math.max(p.value, p.min), p.max);
+
+const clampOffset = (p: {
+  offset: TCoord;
+  scale: number;
+  imageSize: { width: number; height: number };
+  rect: { width: number; height: number };
+}) => {
+  const maxX = 0; // image left edge cannot go past container left
+  const maxY = 0; // image top edge cannot go past container top
+
+  const minX = Math.min(p.rect.width - p.imageSize.width * p.scale, 0); // image right edge cannot go past container right
+  const minY = Math.min(p.rect.height - p.imageSize.height * p.scale, 0); // bottom edge
+
+  const x = clamp({ value: p.offset.x, min: minX, max: maxX });
+  const y = clamp({ value: p.offset.y, min: minY, max: maxY });
+  const rtn = { x, y };
+  console.log(`ZoomableImage.tsx:${/*LL*/ 40}`, { rtn });
+  return rtn;
+};
+
+type TCoord = { x: number; y: number };
+const zoomIncrement = 0.08; // fixed scale increment
+export const ZoomableImage = (p: {
+  src: string;
+  onScaleChange: (scale: number) => void;
+  onOffsetChange: (coord: TCoord) => void;
+  onNaturalDimensionsChange: (dimensions: { width: number; height: number }) => void;
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
+  const [naturalImageDimensions, setNaturalImageDimensions] = useState({ height: 0, width: 0 });
   const [offsetCoord, setOffsetCoord] = useState({ x: 0, y: 0 });
+
+  useEffect(() => p.onScaleChange(scale), [scale]);
+  useEffect(() => p.onOffsetChange(offsetCoord), [offsetCoord]);
+  useEffect(() => p.onNaturalDimensionsChange(naturalImageDimensions), [naturalImageDimensions]);
+
+  const zoom = (p: { direction: 1 | -1; rect: DOMRect; clientCoord: { x: number; y: number } }) => {
+    const tempScale = scale + p.direction * zoomIncrement;
+    const newScale = tempScale < 0.2 ? 0.2 : tempScale > 8 ? 8 : tempScale;
+
+    if (scale === newScale) return;
+
+    const newOffsetCoord = computeOffset({
+      rect: p.rect,
+      oldScale: scale,
+      newScale,
+      clientCoord: p.clientCoord,
+      offsetCoord,
+    });
+
+    setOffsetCoord(newOffsetCoord);
+    setScale(newScale);
+  };
 
   useEffect(() => {
     const c = containerRef.current;
     if (!c) return;
 
-    const onWheel = (e: WheelEvent | any) => {
+    const onWheel = (e: WheelEvent) => {
       e.preventDefault();
 
-      const direction = e.deltaY > 0 ? -1 : 1; // out vs in
-
-      const tempScale = scale + direction * zoomIncrement;
-      const newScale = tempScale < 0.2 ? 0.2 : tempScale > 8 ? 8 : tempScale;
-
-      if (scale === newScale) return;
-
       const rect = c.getBoundingClientRect();
-
-      const clientCoord = { x: e.clientX, y: e.clientY };
-      const newOffsetCoord = computeOffset({
-        rect,
-        oldScale: scale,
-        newScale,
-        clientCoord,
-        offsetCoord,
-      });
-
-      setOffsetCoord(newOffsetCoord);
-      setScale(newScale);
+      if (e.ctrlKey || e.metaKey) {
+        const direction = e.deltaY > 0 ? -1 : 1;
+        zoom({ direction, rect, clientCoord: { x: e.clientX, y: e.clientY } });
+      } else {
+        setOffsetCoord((prev) =>
+          clampOffset({
+            offset: { x: prev.x - e.deltaX, y: prev.y - e.deltaY },
+            scale,
+            imageSize: naturalImageDimensions,
+            rect,
+          })
+        );
+      }
     };
 
     c.addEventListener("wheel", onWheel, { passive: false });
@@ -62,13 +107,20 @@ export const ZoomableImage = (p: { src: string }) => {
     <>
       <div
         ref={containerRef}
-        onDoubleClick={() => {
-          setScale(1);
-          setOffsetCoord({ x: 0, y: 0 });
+        style={{
+          touchAction: "none",
+          background: "gray",
+          overflow: "hidden",
+          width: "100%",
+          overflowX: "scroll",
         }}
-        style={{ touchAction: "none", background: "gray", overflow: "hidden" }}
       >
         <img
+          onLoad={(e) => {
+            const height = e.currentTarget.naturalHeight;
+            const width = e.currentTarget.naturalWidth;
+            setNaturalImageDimensions({ height, width });
+          }}
           src={p.src}
           alt=""
           draggable={false}
@@ -78,9 +130,6 @@ export const ZoomableImage = (p: { src: string }) => {
             transformOrigin: "0 0",
           }}
         />
-      </div>
-      <div className="absolute left-2 top-2 bg-white/70 text-xs rounded px-2 py-1 shadow">
-        Scroll to zoom • Drag to pan • Double-click to reset
       </div>
     </>
   );
