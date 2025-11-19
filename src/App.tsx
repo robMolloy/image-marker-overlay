@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ZoomableImage } from "./components/ZoomableImage";
+import { ZoomableImage } from "./components/prototype2/ZoomableImage";
 
 type TCoord = { x: number; y: number };
 type TDimensions = { width: number; height: number };
@@ -15,24 +15,24 @@ const OverlayMarkerWrapper = (p: {
   return (
     <div
       style={{ position: "relative" }}
-      // onDoubleClick={(e) => {
-      //   const rect = e.currentTarget.getBoundingClientRect();
-      //   const clickX = e.clientX - rect.left;
-      //   const clickY = e.clientY - rect.top;
+      onDoubleClick={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const clickY = e.clientY - rect.top;
 
-      //   const imageX = (clickX - p.offset.x) / p.scale;
-      //   const imageY = (clickY - p.offset.y) / p.scale;
+        const imageX = (clickX - p.offset.x) / p.scale;
+        const imageY = (clickY - p.offset.y) / p.scale;
 
-      //   if (
-      //     imageX < 0 ||
-      //     imageY < 0 ||
-      //     imageX > p.naturalImageDimensions.width ||
-      //     imageY > p.naturalImageDimensions.height
-      //   )
-      //     return;
+        if (
+          imageX < 0 ||
+          imageY < 0 ||
+          imageX > p.naturalImageDimensions.width ||
+          imageY > p.naturalImageDimensions.height
+        )
+          return;
 
-      //   p.setMarkers((prev) => [...prev, { x: imageX, y: imageY }]);
-      // }}
+        p.setMarkers((prev) => [...prev, { x: imageX, y: imageY }]);
+      }}
     >
       {p.children}
 
