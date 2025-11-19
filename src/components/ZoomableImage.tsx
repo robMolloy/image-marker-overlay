@@ -28,14 +28,16 @@ const isOutOfBounds = (p: {
   offset: { x: number; y: number };
   naturalWidth: number;
   scale: number;
+  containerWidth: number;
 }) => {
-  const { offset, naturalWidth, scale } = p;
+  const { offset, naturalWidth, scale, containerWidth } = p;
 
   const imageWidth = naturalWidth * scale;
-
+  const leftEdge = offset.x;
   const rightEdge = offset.x + imageWidth;
 
-  return rightEdge < 0;
+  // True if the image is completely off either side
+  return rightEdge < 0 || leftEdge > containerWidth;
 };
 
 type TCoord = { x: number; y: number };
@@ -111,6 +113,7 @@ export const ZoomableImage = (p: {
             offset: offsetCoord,
             naturalWidth: naturalImageDimensions.width,
             scale,
+            containerWidth: container.getBoundingClientRect().width,
           });
           if (isoob) moveWithinBounds();
         }}
