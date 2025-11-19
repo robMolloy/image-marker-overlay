@@ -24,7 +24,7 @@ const computeScale = (p: { direction: 1 | -1; scale: number }) => {
   return tempScale < 0.2 ? 0.2 : tempScale > 8 ? 8 : tempScale;
 };
 
-const isOutOfBounds = (p: {
+const isCompletelyOutOfBounds = (p: {
   offset: { x: number; y: number };
   naturalImageDimensions: { width: number; height: number };
   scale: number;
@@ -44,6 +44,29 @@ const isOutOfBounds = (p: {
     leftEdge > p.containerRect.width ||
     bottomEdge < 0 ||
     topEdge > p.containerRect.height
+  );
+};
+
+const isSomeOutOfBounds = (p: {
+  offset: { x: number; y: number };
+  naturalImageDimensions: { width: number; height: number };
+  scale: number;
+  containerRect: DOMRect;
+}) => {
+  const imageWidth = p.naturalImageDimensions.width * p.scale;
+  const imageHeight = p.naturalImageDimensions.height * p.scale;
+
+  const leftEdge = p.offset.x;
+  const rightEdge = p.offset.x + imageWidth;
+  const topEdge = p.offset.y;
+  const bottomEdge = p.offset.y + imageHeight;
+
+  // True if image is completely out of bounds in any direction
+  return (
+    leftEdge < 0 ||
+    rightEdge > p.containerRect.width ||
+    topEdge < 0 ||
+    bottomEdge > p.containerRect.height
   );
 };
 
