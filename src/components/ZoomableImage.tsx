@@ -260,6 +260,38 @@ const clampOffsetToContainerBounds = (p: {
     return { x: offsetCoord.x, y: getAlignBottomOffsetY({ scaledImageDimensions, containerRect }) };
 };
 
+const clampLeftOverflowWhenImageIsSmallerThanContainer = (p: {
+  offsetCoord: { x: number; y: number };
+  scaledImageDimensions: { width: number; height: number };
+  containerRect: DOMRect;
+}) => {
+  const { offsetCoord, scaledImageDimensions, containerRect } = p;
+
+  if (
+    isRightEdgeWithinBounds({ offsetCoord, scaledImageDimensions, containerRect }) &&
+    isLeftSomeOutOfBounds({ offsetCoord })
+  )
+    return { x: getAlignLeftOffsetX(), y: offsetCoord.y };
+
+  if (
+    isBottomEdgeWithinBounds({ offsetCoord, scaledImageDimensions, containerRect }) &&
+    isTopSomeOutOfBounds({ offsetCoord })
+  )
+    return { x: offsetCoord.x, y: getAlignTopOffsetY() };
+
+  if (
+    isLeftEdgeWithinBounds({ offsetCoord }) &&
+    isRightSomeOutOfBounds({ offsetCoord, scaledImageDimensions, containerRect })
+  )
+    return { x: getAlignRightOffsetX({ scaledImageDimensions, containerRect }), y: offsetCoord.y };
+
+  if (
+    isTopEdgeWithinBounds({ offsetCoord }) &&
+    isBottomSomeOutOfBounds({ offsetCoord, scaledImageDimensions, containerRect })
+  )
+    return { x: offsetCoord.x, y: getAlignBottomOffsetY({ scaledImageDimensions, containerRect }) };
+};
+
 type TCoord = { x: number; y: number };
 const zoomIncrement = 0.08; // fixed scale increment
 export const ZoomableImage = (p: {
@@ -316,18 +348,11 @@ export const ZoomableImage = (p: {
         return setOffsetCoord(realignedCoord ? realignedCoord : newOffsetCoord);
       } else {
         if (isSmaller) {
-          const realignedCoord = getAlignedOffsetCoordsIfCompletelyOutOfBounds({
+          const realignedCoord = clampLeftOverflowWhenImageIsSmallerThanContainer({
             offsetCoord,
             scaledImageDimensions,
             containerRect,
           });
-          // const realignedCoord = clampOffsetToContainerBounds({
-          //   offsetCoord,
-          //   scaledImageDimensions,
-          //   containerRect,
-          //   directionX: e.deltaX > 0 ? 1 : -1,
-          //   directionY: e.deltaY > 0 ? 1 : -1,
-          // });
           if (realignedCoord) return setOffsetCoord(realignedCoord);
         } else {
           const realignedCoord = clampOffsetToContainerBounds({
