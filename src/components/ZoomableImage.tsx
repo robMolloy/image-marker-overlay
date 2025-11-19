@@ -81,6 +81,41 @@ const isImageSmallerThanContainer = (p: {
   return imageWidth < p.containerRect.width && imageHeight < p.containerRect.height;
 };
 
+const getTopRightOffsetCoord = (p: {
+  naturalImageDimensions: { width: number; height: number };
+  scale: number;
+  containerRect: DOMRect;
+}) => {
+  const imageWidth = p.naturalImageDimensions.width * p.scale;
+
+  // Align top to 0
+  const newY = 0;
+
+  // Align right edge to container right
+  const newX = p.containerRect.width - imageWidth;
+
+  return { x: newX, y: newY };
+};
+
+const getRightOffsetX = (p: {
+  naturalImageDimensions: { width: number; height: number };
+  scale: number;
+  containerRect: DOMRect;
+}) => {
+  const imageWidth = p.naturalImageDimensions.width * p.scale;
+
+  return p.containerRect.width - imageWidth;
+};
+const getBottomOffsetY = (p: {
+  naturalImageDimensions: { width: number; height: number };
+  scale: number;
+  containerRect: DOMRect;
+}) => {
+  const imageHeight = p.naturalImageDimensions.height * p.scale;
+
+  return p.containerRect.height - imageHeight;
+};
+
 type TCoord = { x: number; y: number };
 const zoomIncrement = 0.08; // fixed scale increment
 export const ZoomableImage = (p: {
@@ -160,13 +195,29 @@ export const ZoomableImage = (p: {
 
           console.log(`ZoomableImage.tsx:${/*LL*/ 161}`, { isSmaller });
 
-          const isoob = isCompletelyOutOfBounds({
-            offset: offsetCoord,
+          // const coordX = getRightOffsetX({
+          //   naturalImageDimensions,
+          //   scale,
+          //   containerRect,
+          // });
+
+          // setOffsetCoord((prev) => ({ x: coordX, y: prev.y }));
+
+          const coordY = getBottomOffsetY({
             naturalImageDimensions,
             scale,
-            containerRect: container.getBoundingClientRect(),
+            containerRect,
           });
-          if (isoob) moveWithinBounds();
+
+          setOffsetCoord((prev) => ({ x: prev.x, y: coordY }));
+
+          // const isoob = isCompletelyOutOfBounds({
+          //   offset: offsetCoord,
+          //   naturalImageDimensions,
+          //   scale,
+          //   containerRect: container.getBoundingClientRect(),
+          // });
+          // if (isoob) moveWithinBounds();
         }}
       >
         <img
