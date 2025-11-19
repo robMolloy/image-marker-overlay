@@ -24,6 +24,20 @@ const computeScale = (p: { direction: 1 | -1; scale: number }) => {
   return tempScale < 0.2 ? 0.2 : tempScale > 8 ? 8 : tempScale;
 };
 
+const isOutOfBounds = (p: {
+  offset: { x: number; y: number };
+  naturalWidth: number;
+  scale: number;
+}) => {
+  const { offset } = p;
+
+  // Left edge of the scaled image
+  const leftEdge = offset.x;
+
+  // True if the image starts past the left side
+  return leftEdge < 0;
+};
+
 type TCoord = { x: number; y: number };
 const zoomIncrement = 0.08; // fixed scale increment
 export const ZoomableImage = (p: {
@@ -40,6 +54,11 @@ export const ZoomableImage = (p: {
   useEffect(() => p.onScaleChange(scale), [scale]);
   useEffect(() => p.onOffsetChange(offsetCoord), [offsetCoord]);
   useEffect(() => p.onNaturalDimensionsChange(naturalImageDimensions), [naturalImageDimensions]);
+
+  const moveWithinBounds = () => {
+    window.scrollTo(0, 0);
+    setOffsetCoord({ x: 0, y: 0 });
+  };
 
   useEffect(() => {
     const c = containerRef.current;
@@ -85,6 +104,16 @@ export const ZoomableImage = (p: {
           overflow: "hidden",
           width: "100%",
         }}
+        onDoubleClick={() => {
+          const container = containerRef.current;
+          if (!container) return;
+          const isoob = isOutOfBounds({
+            offset: offsetCoord,
+            naturalWidth: naturalImageDimensions.width,
+            scale,
+          });
+          if (isoob) moveWithinBounds();
+        }}
       >
         <img
           onLoad={(e) => {
@@ -95,8 +124,9 @@ export const ZoomableImage = (p: {
           src={p.src}
           alt=""
           draggable={false}
-          className="select-none pointer-events-none absolute left-0 top-0"
           style={{
+            left: 0,
+            top: 0,
             transform: `translate(${offsetCoord.x}px, ${offsetCoord.y}px) scale(${scale})`,
             transformOrigin: "0 0",
           }}
