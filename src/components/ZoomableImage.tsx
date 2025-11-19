@@ -104,35 +104,35 @@ const isSomeOutOfBounds = (p: {
   );
 };
 
-const isLeftSomeOutOfBounds = (p: { offset: { x: number; y: number } }) => {
-  const leftEdge = p.offset.x;
+const isLeftSomeOutOfBounds = (p: { offsetCoord: { x: number; y: number } }) => {
+  const leftEdge = p.offsetCoord.x;
   return leftEdge < 0;
 };
 
 const isRightSomeOutOfBounds = (p: {
-  offset: { x: number; y: number };
+  offsetCoord: { x: number; y: number };
   naturalImageDimensions: { width: number; height: number };
   scale: number;
   containerRect: DOMRect;
 }) => {
   const imageWidth = p.naturalImageDimensions.width * p.scale;
-  const rightEdge = p.offset.x + imageWidth;
+  const rightEdge = p.offsetCoord.x + imageWidth;
   return rightEdge > p.containerRect.width;
 };
 
-const isTopSomeOutOfBounds = (p: { offset: { x: number; y: number } }) => {
-  const topEdge = p.offset.y;
+const isTopSomeOutOfBounds = (p: { offsetCoord: { x: number; y: number } }) => {
+  const topEdge = p.offsetCoord.y;
   return topEdge < 0;
 };
 
 const isBottomSomeOutOfBounds = (p: {
-  offset: { x: number; y: number };
+  offsetCoord: { x: number; y: number };
   naturalImageDimensions: { width: number; height: number };
   scale: number;
   containerRect: DOMRect;
 }) => {
   const imageHeight = p.naturalImageDimensions.height * p.scale;
-  const bottomEdge = p.offset.y + imageHeight;
+  const bottomEdge = p.offsetCoord.y + imageHeight;
   return bottomEdge > p.containerRect.height;
 };
 
@@ -193,6 +193,7 @@ export const ZoomableImage = (p: {
   useEffect(() => {
     const c = containerRef.current;
     if (!c) return;
+    const containerRect = c.getBoundingClientRect();
 
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
@@ -202,6 +203,28 @@ export const ZoomableImage = (p: {
         const newScale = computeScale({ direction, scale });
 
         if (scale === newScale) return;
+
+        if (isImageSmallerThanContainer({ naturalImageDimensions, scale, containerRect })) {
+          if (isLeftSomeOutOfBounds({ offsetCoord }))
+            return setOffsetCoord((prev) => ({ x: getLeftOffsetX(), y: prev.y }));
+
+          if (isRightSomeOutOfBounds({ offsetCoord, naturalImageDimensions, scale, containerRect }))
+            return setOffsetCoord((prev) => ({
+              x: getRightOffsetX({ naturalImageDimensions, scale, containerRect }),
+              y: prev.y,
+            }));
+
+          if (isTopSomeOutOfBounds({ offsetCoord: offsetCoord }))
+            return setOffsetCoord((prev) => ({ x: prev.x, y: getTopOffsetY() }));
+
+          if (
+            isBottomSomeOutOfBounds({ offsetCoord, naturalImageDimensions, scale, containerRect })
+          )
+            return setOffsetCoord((prev) => ({
+              x: prev.x,
+              y: getBottomOffsetY({ naturalImageDimensions, scale, containerRect }),
+            }));
+        }
 
         const newOffsetCoord = computeOffset({
           rect: c.getBoundingClientRect(),
@@ -234,43 +257,43 @@ export const ZoomableImage = (p: {
           overflow: "hidden",
           width: "100%",
         }}
-        onDoubleClick={() => {
-          const container = containerRef.current;
-          if (!container) return;
+        // onDoubleClick={() => {
+        //   const container = containerRef.current;
+        //   if (!container) return;
 
-          const containerRect = container.getBoundingClientRect();
-          const isSmaller = isImageSmallerThanContainer({
-            naturalImageDimensions,
-            scale,
-            containerRect,
-          });
+        //   const containerRect = container.getBoundingClientRect();
+        //   const isSmaller = isImageSmallerThanContainer({
+        //     naturalImageDimensions,
+        //     scale,
+        //     containerRect,
+        //   });
 
-          console.log(`ZoomableImage.tsx:${/*LL*/ 161}`, { isSmaller });
+        //   console.log(`ZoomableImage.tsx:${/*LL*/ 161}`, { isSmaller });
 
-          // const coordX = getRightOffsetX({
-          //   naturalImageDimensions,
-          //   scale,
-          //   containerRect,
-          // });
+        //   // const coordX = getRightOffsetX({
+        //   //   naturalImageDimensions,
+        //   //   scale,
+        //   //   containerRect,
+        //   // });
 
-          // setOffsetCoord((prev) => ({ x: coordX, y: prev.y }));
+        //   // setOffsetCoord((prev) => ({ x: coordX, y: prev.y }));
 
-          const coordY = getBottomOffsetY({
-            naturalImageDimensions,
-            scale,
-            containerRect,
-          });
+        //   const coordY = getBottomOffsetY({
+        //     naturalImageDimensions,
+        //     scale,
+        //     containerRect,
+        //   });
 
-          setOffsetCoord((prev) => ({ x: prev.x, y: coordY }));
+        //   setOffsetCoord((prev) => ({ x: prev.x, y: coordY }));
 
-          // const isoob = isCompletelyOutOfBounds({
-          //   offset: offsetCoord,
-          //   naturalImageDimensions,
-          //   scale,
-          //   containerRect: container.getBoundingClientRect(),
-          // });
-          // if (isoob) moveWithinBounds();
-        }}
+        //   // const isoob = isCompletelyOutOfBounds({
+        //   //   offset: offsetCoord,
+        //   //   naturalImageDimensions,
+        //   //   scale,
+        //   //   containerRect: container.getBoundingClientRect(),
+        //   // });
+        //   // if (isoob) moveWithinBounds();
+        // }}
       >
         <img
           onLoad={(e) => {
