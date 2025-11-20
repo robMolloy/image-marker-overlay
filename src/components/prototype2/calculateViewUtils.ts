@@ -1,11 +1,11 @@
 import {
-  isLeftEdgeToLeftOfLeftContainerEdge,
+  isLeftEdgeOutOfLeftBound,
   getCoordXForLeftEdgeOnLeftOfContainer,
-  isRightEdgeToRightOfRightContainerEdge,
+  isRightEdgeOutOfRightBound,
   getCoordXForRightEdgeOnRightOfContainer,
-  isTopEdgeAboveTopOfTopContainerEdge,
+  isTopEdgeOutOfTopBound,
   getCoordYForTopEdgeOnTopOfContainer,
-  isBottomBelowBottomOfBottomContainerEdge,
+  isBottomEdgeOutOfBottomBound,
   getCoordYForBottomEdgeOnBottomOfContainer,
   isLeftEdgeToRightOfLeftContainerEdge,
   isRightEdgeToLeftOfRightContainerEdge,
@@ -19,21 +19,19 @@ export const getCoordToSnapToEdgeOfContainerWhenAnyEdgeGoesOutOfBounds = (p: {
   containerRect: DOMRect;
 }) => {
   const { offsetCoord, scaledImageDimensions, containerRect } = p;
-  if (isLeftEdgeToLeftOfLeftContainerEdge({ offsetCoord }))
+  if (isLeftEdgeOutOfLeftBound({ offsetCoord }))
     return { x: getCoordXForLeftEdgeOnLeftOfContainer(), y: offsetCoord.y };
 
-  if (isRightEdgeToRightOfRightContainerEdge({ offsetCoord, scaledImageDimensions, containerRect }))
+  if (isRightEdgeOutOfRightBound({ offsetCoord, scaledImageDimensions, containerRect }))
     return {
       x: getCoordXForRightEdgeOnRightOfContainer({ scaledImageDimensions, containerRect }),
       y: offsetCoord.y,
     };
 
-  if (isTopEdgeAboveTopOfTopContainerEdge({ offsetCoord }))
+  if (isTopEdgeOutOfTopBound({ offsetCoord }))
     return { x: offsetCoord.x, y: getCoordYForTopEdgeOnTopOfContainer() };
 
-  if (
-    isBottomBelowBottomOfBottomContainerEdge({ offsetCoord, scaledImageDimensions, containerRect })
-  )
+  if (isBottomEdgeOutOfBottomBound({ offsetCoord, scaledImageDimensions, containerRect }))
     return {
       x: offsetCoord.x,
       y: getCoordYForBottomEdgeOnBottomOfContainer({ scaledImageDimensions, containerRect }),
@@ -84,21 +82,21 @@ export const clampWhenImageIsSmallerThanContainer = (p: {
 
   if (
     isRightEdgeToLeftOfRightContainerEdge({ offsetCoord, scaledImageDimensions, containerRect }) &&
-    isLeftEdgeToLeftOfLeftContainerEdge({ offsetCoord }) &&
+    isLeftEdgeOutOfLeftBound({ offsetCoord }) &&
     p.directionX === 1
   )
     return { x: getCoordXForLeftEdgeOnLeftOfContainer(), y: offsetCoord.y };
 
   if (
     isBottomEdgeAboveOfBottomContainerEdge({ offsetCoord, scaledImageDimensions, containerRect }) &&
-    isTopEdgeAboveTopOfTopContainerEdge({ offsetCoord }) &&
+    isTopEdgeOutOfTopBound({ offsetCoord }) &&
     p.directionY === 1
   )
     return { x: offsetCoord.x, y: getCoordYForTopEdgeOnTopOfContainer() };
 
   if (
     isLeftEdgeToRightOfLeftContainerEdge({ offsetCoord }) &&
-    isRightEdgeToRightOfRightContainerEdge({ offsetCoord, scaledImageDimensions, containerRect }) &&
+    isRightEdgeOutOfRightBound({ offsetCoord, scaledImageDimensions, containerRect }) &&
     p.directionX === -1
   )
     return {
@@ -108,7 +106,7 @@ export const clampWhenImageIsSmallerThanContainer = (p: {
 
   if (
     isTopEdgeBelowOfTopContainerEdge({ offsetCoord }) &&
-    isBottomBelowBottomOfBottomContainerEdge({
+    isBottomEdgeOutOfBottomBound({
       offsetCoord,
       scaledImageDimensions,
       containerRect,

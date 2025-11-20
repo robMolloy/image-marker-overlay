@@ -92,9 +92,9 @@ const ImageWithMarkers = ({ src }: { src: string }) => {
   );
 };
 const imgSrcs = [
-  "http://localhost:5174/three-valleys.jpg",
-  "http://localhost:5174/meribel.jpg",
-  "http://localhost:5174/plan-3-vallees.jpg",
+  "/three-valleys.jpg",
+  "/meribel.jpg",
+  "/plan-3-vallees.jpg",
   "https://upload.wikimedia.org/wikipedia/commons/8/85/Smiley.svg",
   "https://upload.wikimedia.org/wikipedia/commons/3/3e/IdeaLab_badge_2.png",
 ] as const;

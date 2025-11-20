@@ -1,11 +1,14 @@
-export const isLeftEdgeToLeftOfLeftContainerEdge = (p: {
-  offsetCoord: { x: number; y: number };
-}) => {
+// isLeftEdgeOutOfLeftBound;
+// isRightEdgeOutOfRightBound;
+// isTopEdgeOutOfTopBound;
+// isBottomEdgeOutOfBottomBound;
+
+export const isLeftEdgeOutOfLeftBound = (p: { offsetCoord: { x: number; y: number } }) => {
   const leftEdge = p.offsetCoord.x;
   return leftEdge <= 0;
 };
 
-export const isRightEdgeToRightOfRightContainerEdge = (p: {
+export const isRightEdgeOutOfRightBound = (p: {
   offsetCoord: { x: number; y: number };
   scaledImageDimensions: { width: number; height: number };
   containerRect: DOMRect;
@@ -14,14 +17,12 @@ export const isRightEdgeToRightOfRightContainerEdge = (p: {
   return rightEdge >= p.containerRect.width;
 };
 
-export const isTopEdgeAboveTopOfTopContainerEdge = (p: {
-  offsetCoord: { x: number; y: number };
-}) => {
+export const isTopEdgeOutOfTopBound = (p: { offsetCoord: { x: number; y: number } }) => {
   const topEdge = p.offsetCoord.y;
   return topEdge <= 0;
 };
 
-export const isBottomBelowBottomOfBottomContainerEdge = (p: {
+export const isBottomEdgeOutOfBottomBound = (p: {
   offsetCoord: { x: number; y: number };
   scaledImageDimensions: { width: number; height: number };
   containerRect: DOMRect;

@@ -12,6 +12,14 @@ import {
 } from "./calculateViewGranularUtils";
 
 type TCoord = { x: number; y: number };
+
+const useImageDimensions = () => {
+  const imageRef = useRef<HTMLImageElement>(null);
+
+  const getRect = () => imageRef.current?.getBoundingClientRect();
+
+  return { imageRef, getRect };
+};
 export const ZoomableImage = (p: {
   src: string;
   onScaleChange: (scale: number) => void;
@@ -22,6 +30,7 @@ export const ZoomableImage = (p: {
   const [scale, setScale] = useState(1);
   const [naturalImageDimensions, setNaturalImageDimensions] = useState({ height: 0, width: 0 });
   const [offsetCoord, setOffsetCoord] = useState({ x: 0, y: 0 });
+  const imageDimensionsHook = useImageDimensions();
 
   useEffect(() => p.onScaleChange(scale), [scale]);
   useEffect(() => p.onOffsetChange(offsetCoord), [offsetCoord]);
@@ -34,10 +43,14 @@ export const ZoomableImage = (p: {
 
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      const scaledImageDimensions = getScaledImageDimensions({ naturalImageDimensions, scale });
-      const isSmaller = isImageSmallerThanContainer({ scaledImageDimensions, containerRect });
+      const scaledImageDimensions = imageDimensionsHook.getRect();
+      if (!scaledImageDimensions) return;
+
+      const isImageSmaller = isImageSmallerThanContainer({ scaledImageDimensions, containerRect });
+      console.log(`ZoomableImage.tsx:${/*LL*/ 50}`, { isImageSmaller, scaledImageDimensions });
 
       if (e.ctrlKey || e.metaKey) {
+        window.scrollTo(0, 0);
         const direction = e.deltaY > 0 ? -1 : 1;
         const newScale = computeScale({ direction, scale });
 
@@ -52,7 +65,7 @@ export const ZoomableImage = (p: {
         });
         setScale(newScale);
 
-        if (!isSmaller) return setOffsetCoord(newOffsetCoord);
+        if (!isImageSmaller) return setOffsetCoord(newOffsetCoord);
         const realignedCoord = getCoordToSnapToEdgeOfContainerWhenAnyEdgeGoesOutOfBounds({
           offsetCoord,
           scaledImageDimensions,
@@ -60,7 +73,7 @@ export const ZoomableImage = (p: {
         });
         return setOffsetCoord(realignedCoord ? realignedCoord : newOffsetCoord);
       } else {
-        if (isSmaller) {
+        if (isImageSmaller) {
           const realignedCoord = clampWhenImageIsSmallerThanContainer({
             offsetCoord,
             scaledImageDimensions,
@@ -76,6 +89,11 @@ export const ZoomableImage = (p: {
             containerRect,
             directionX: e.deltaX > 0 ? 1 : -1,
             directionY: e.deltaY > 0 ? 1 : -1,
+          });
+          console.log(`ZoomableImage.tsx:${/*LL*/ 74}`, {
+            scale,
+            naturalImageDimensions,
+            scaledImageDimensions,
           });
           if (realignedCoord) return setOffsetCoord(realignedCoord);
         }
@@ -95,10 +113,12 @@ export const ZoomableImage = (p: {
           touchAction: "none",
           background: "gray",
           overflow: "hidden",
-          width: "100%",
+          width: "100vw",
+          height: "100vh",
         }}
       >
         <img
+          ref={imageDimensionsHook.imageRef}
           onLoad={(e) => {
             const height = e.currentTarget.naturalHeight;
             const width = e.currentTarget.naturalWidth;
@@ -110,6 +130,8 @@ export const ZoomableImage = (p: {
           style={{
             left: 0,
             top: 0,
+            maxWidth: "100vw",
+            maxHeight: "100vh",
             transform: `translate(${offsetCoord.x}px, ${offsetCoord.y}px) scale(${scale})`,
             transformOrigin: "0 0",
           }}
