@@ -1,15 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { computeScale } from "./scaleUtils";
+import { computeScale, isImageSmallerThanContainer } from "./scaleUtils";
 import { computeOffset } from "./offsetUtils";
 import {
   clampOffsetToContainerBounds,
   clampWhenImageIsSmallerThanContainer,
   getCoordToSnapToEdgeOfContainerWhenAnyEdgeGoesOutOfBounds,
 } from "./calculateViewUtils";
-import {
-  getScaledImageDimensions,
-  isImageSmallerThanContainer,
-} from "./calculateViewGranularUtils";
 
 type TCoord = { x: number; y: number };
 
@@ -47,7 +43,6 @@ export const ZoomableImage = (p: {
       if (!scaledImageDimensions) return;
 
       const isImageSmaller = isImageSmallerThanContainer({ scaledImageDimensions, containerRect });
-      console.log(`ZoomableImage.tsx:${/*LL*/ 50}`, { isImageSmaller, scaledImageDimensions });
 
       if (e.ctrlKey || e.metaKey) {
         window.scrollTo(0, 0);
@@ -89,11 +84,6 @@ export const ZoomableImage = (p: {
             containerRect,
             directionX: e.deltaX > 0 ? 1 : -1,
             directionY: e.deltaY > 0 ? 1 : -1,
-          });
-          console.log(`ZoomableImage.tsx:${/*LL*/ 74}`, {
-            scale,
-            naturalImageDimensions,
-            scaledImageDimensions,
           });
           if (realignedCoord) return setOffsetCoord(realignedCoord);
         }

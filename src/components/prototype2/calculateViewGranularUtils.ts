@@ -1,8 +1,3 @@
-// isLeftEdgeOutOfLeftBound;
-// isRightEdgeOutOfRightBound;
-// isTopEdgeOutOfTopBound;
-// isBottomEdgeOutOfBottomBound;
-
 export const isLeftEdgeOutOfLeftBound = (p: { offsetCoord: { x: number; y: number } }) => {
   const leftEdge = p.offsetCoord.x;
   return leftEdge <= 0;
@@ -29,26 +24,6 @@ export const isBottomEdgeOutOfBottomBound = (p: {
 }) => {
   const bottomEdge = p.offsetCoord.y + p.scaledImageDimensions.height;
   return bottomEdge >= p.containerRect.height;
-};
-
-export const getScaledImageDimensions = (p: {
-  naturalImageDimensions: { width: number; height: number };
-  scale: number;
-}) => {
-  return {
-    width: p.naturalImageDimensions.width * p.scale,
-    height: p.naturalImageDimensions.height * p.scale,
-  };
-};
-
-export const isImageSmallerThanContainer = (p: {
-  scaledImageDimensions: { width: number; height: number };
-  containerRect: DOMRect;
-}) => {
-  return (
-    p.scaledImageDimensions.width < p.containerRect.width &&
-    p.scaledImageDimensions.height < p.containerRect.height
-  );
 };
 
 export const getCoordXForRightEdgeOnRightOfContainer = (p: {
